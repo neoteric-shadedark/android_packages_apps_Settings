@@ -256,11 +256,6 @@
             android:key="lift_to_wake"
             android:title="@string/lift_to_wake_title"/>
 
-        <SwitchPreferenceCompat
-            android:key="tap_to_wake"
-            android:title="@string/tap_to_wake"
-            android:summary="@string/tap_to_wake_summary"/>
-
 	<org.neoteric.preference.SystemSettingSwitchPreference
             android:key="double_tap_sleep_gesture"
             android:title="@string/double_tap_to_sleep_title"
