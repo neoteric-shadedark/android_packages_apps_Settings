@@ -561,4 +561,7 @@
     <string name="notification_heads_up_compact_title">Compact Heads Up notifications</string>
     <string name="notification_heads_up_compact_summary">Show brief pop up notifications</string>
 
+    <!-- Radio Info -->
+    <string name="radio_info_title">Radio info</string>
+
 </resources>
