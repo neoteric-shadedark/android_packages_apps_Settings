@@ -276,4 +276,9 @@
         android:order="100"
         settings:controller="com.android.settings.notification.WorkSoundsPreferenceController"/>
 
+    <org.neoteric.preference.SystemSettingSwitchPreference
+        android:key="grant_all_audio_focus"
+        android:title="@string/grant_all_audio_focus_title"
+        android:summary="@string/grant_all_audio_focus_summary"
+        android:defaultValue="false" />
 </PreferenceScreen>
