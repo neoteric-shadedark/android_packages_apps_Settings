@@ -447,4 +447,9 @@
     <!-- Media art -->
     <string name="media_art_title">Media cover art</string>
     <string name="media_art_summary">Display media cover art when available</string>
+
+    <!-- HDR Display -->
+    <string name="hdr_display_title">Enhanced HDR brightness</string>
+    <string name="hdr_display_summary">Brighten and expand the color range and clarity in High Dynamic Range (HDR) images and videos. HDR content will appear brighter. This will increase battery usage</string>
+
 </resources>
