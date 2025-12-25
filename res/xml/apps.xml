@@ -140,6 +140,16 @@
         android:summary="@string/pif_data_summary"
         android:defaultValue=""/>
 
+    <Preference
+        android:key="pif_props"
+        android:title="@string/pif_props_title"
+        android:summary="@string/pif_props_summary"/>
+
+    <Preference
+        android:key="pif_update"
+        android:title="@string/pif_update_title"
+        android:summary="@string/pif_update_summary"/>
+
     <org.neoteric.preference.SecureSettingSwitchPreference
         android:key="window_ignore_secure"
         android:title="@string/window_ignore_secure_title"
