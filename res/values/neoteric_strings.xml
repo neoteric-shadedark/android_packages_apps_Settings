@@ -553,4 +553,8 @@
     <string name="pif_updated_successfully">PIF updated successfully</string>
     <string name="failed_to_update_pif">Failed to update PIF</string>
 
+    <!-- Status Bar Brightness Control --> 
+    <string name="status_bar_brightness_control_title">Brightness control</string>
+    <string name="status_bar_brightness_control_summary">Adjust brightness by swiping across the status bar</string>
+
 </resources>
