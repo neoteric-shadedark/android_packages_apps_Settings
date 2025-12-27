@@ -22,6 +22,7 @@ import android.app.settings.SettingsEnums;
 import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.SystemProperties;
 import android.provider.SearchIndexableResource;
 import android.provider.Settings;
 import android.net.Uri;
@@ -32,6 +33,7 @@ import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.preference.Preference;
+import androidx.preference.SwitchPreference;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.settings.R;
@@ -43,6 +45,8 @@ import com.android.settings.widget.PreferenceCategoryController;
 import com.android.settingslib.core.AbstractPreferenceController;
 import com.android.settingslib.core.lifecycle.Lifecycle;
 import com.android.settingslib.search.SearchIndexable;
+
+import org.neoteric.preference.SystemPropertySwitchPreference;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -65,11 +69,14 @@ public class AppDashboardFragment extends DashboardFragment {
     private static final String PIF_DATA_KEY = "pif_data_setting";
     private static final String PIF_PROPS_KEY = "pif_props";
     private static final String PIF_UPDATE_KEY = "pif_update";
-
+    private static final String PIF_MASTER_SWITCH_KEY = "persist.sys.pihooks.disable.gms_props";
     private ActivityResultLauncher<Intent> mKeyboxFilePickerLauncher;
     private ActivityResultLauncher<Intent> mPifFilePickerLauncher;
     private KeyboxDataPreference mKeyboxDataPreference;
     private PifDataPreference mPifDataPreference;
+    private SystemPropertySwitchPreference mPifMasterSwitch;
+    private Preference mPifProps;
+    private Preference mPifUpdate;
     private AppsPreferenceController mAppsPreferenceController;
 
     private static final String APP_LOCK_PREF_KEY = "app_lock";
@@ -155,26 +162,50 @@ public class AppDashboardFragment extends DashboardFragment {
 
         mKeyboxDataPreference = findPreference(KEYBOX_DATA_KEY);
         mPifDataPreference = findPreference(PIF_DATA_KEY);
+        mPifMasterSwitch = findPreference(PIF_MASTER_SWITCH_KEY);
+        mPifProps = findPreference(PIF_PROPS_KEY);
+        mPifUpdate = findPreference(PIF_UPDATE_KEY);
 
         if (mKeyboxDataPreference != null) {
             mKeyboxDataPreference.setFilePickerLauncher(mKeyboxFilePickerLauncher);
         }
 
+        updatePifPreferencesState(!mPifMasterSwitch.isChecked());
+
+        mPifMasterSwitch.setOnPreferenceChangeListener((preference, newValue) -> {
+            boolean disabled = (Boolean) newValue;
+            updatePifPreferencesState(!disabled);
+            if (!disabled) {
+                clearPifProps();
+            }
+            return true;
+        });
+
         if (mPifDataPreference != null) {
             mPifDataPreference.setFilePickerLauncher(mPifFilePickerLauncher);
         }
 
-        Preference pifProps = findPreference(PIF_PROPS_KEY);
-        pifProps.setOnPreferenceClickListener(preference -> {
+        mPifProps.setOnPreferenceClickListener(preference -> {
             showPifProps();
             return true;
         });
 
-        Preference pifUpdate = findPreference(PIF_UPDATE_KEY);
-        pifUpdate.setOnPreferenceClickListener(preference -> {
+        mPifUpdate.setOnPreferenceClickListener(preference -> {
             new UpdatePifTask().execute();
             return true;
         });
+    }
+
+    private void updatePifPreferencesState(boolean enabled) {
+        mPifDataPreference.setEnabled(enabled);
+        mPifProps.setEnabled(enabled);
+        mPifUpdate.setEnabled(enabled);
+    }
+
+    private void clearPifProps() {
+        Settings.Secure.putString(getContext().getContentResolver(), Settings.Secure.PIF_DATA, "");
+        Settings.Secure.putString(getContext().getContentResolver(), Settings.Secure.FETCHED_PIF, "");
+        Toast.makeText(getContext(), "PIF props cleared", Toast.LENGTH_SHORT).show();
     }
 
     private void showPifProps() {

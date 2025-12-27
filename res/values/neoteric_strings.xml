@@ -33,6 +33,11 @@
     <string name="pif_update_title">Update Play Integrity fix</string>
     <string name="pif_update_summary">Force check for updated PIF. This will remove any manually set PIF.</string>
 
+    <!-- PIF Category -->
+    <string name="pif_category_title">Play Integrity Fix</string>
+    <string name="pif_master_switch_title">Disable Play Integrity Fix</string>
+    <string name="pif_master_switch_summary">This will disable all Play Integrity Fix features</string>
+
     <!-- QS Panel -->
     <string name="qs_show_brightness_title">Where to show</string>
     <string name="qs_show_brightness_hide">Hide</string>

@@ -132,6 +132,12 @@
         android:key="keybox_data_setting"
         android:title="@string/keybox_data_title"/>
 
+    <org.neoteric.preference.SystemPropertySwitchPreference
+        android:key="persist.sys.pihooks.disable.gms_props"
+        android:title="@string/pif_master_switch_title"
+        android:summary="@string/pif_master_switch_summary"
+        android:defaultValue="false" />
+
     <com.android.settings.applications.PifDataPreference
         android:key="pif_data_setting"
         android:title="@string/pif_data_title"/>

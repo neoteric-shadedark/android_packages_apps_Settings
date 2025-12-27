@@ -72,10 +72,10 @@ public class PifDataPreference extends Preference {
         }
 
         deleteButton.setVisibility(hasData ? View.VISIBLE : View.GONE);
-        deleteButton.setEnabled(hasData);
+        deleteButton.setEnabled(hasData && isEnabled());
 
         holder.itemView.setOnClickListener(v -> {
-            if (mFilePickerLauncher != null) {
+            if (mFilePickerLauncher != null && isEnabled()) {
                 Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                 intent.setType("*/*");
                 intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/json", "text/json"});
