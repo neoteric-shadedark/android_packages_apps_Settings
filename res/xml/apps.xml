@@ -169,6 +169,13 @@
         android:summary="@string/spoof_games_summary"
         android:defaultValue="false" />
 
+    <!-- App Spoofing -->
+    <Preference
+        android:key="user_selectable_app_spoofing"
+        android:title="@string/user_selectable_app_spoofing_title"
+        android:summary="@string/user_selectable_app_spoofing_summary"
+        android:fragment="com.android.settings.applications.UserSelectedAppSpoofSettings" />
+
     <org.neoteric.preference.SystemPropertySwitchPreference
         android:key="persist.sys.pairip.activity.block"
         android:title="@string/miscellaneous_pairip_activity_block_title"
