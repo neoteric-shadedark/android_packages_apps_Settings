@@ -533,4 +533,8 @@
     <string name="spoof_games_title">Game spoofing</string>
     <string name="spoof_games_summary">Unlock higher graphics or FPS in certain games.</string>
 
+    <!-- Miscellaneous -->
+    <string name="miscellaneous_pairip_activity_block_title">Block PairIP license verification</string>
+    <string name="miscellaneous_pairip_activity_block_summary">Prevent Play Store apps from launching the \"Get this app from Play\" screen when not installed by the Play Store</string>
+
 </resources>

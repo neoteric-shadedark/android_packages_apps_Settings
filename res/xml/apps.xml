@@ -164,6 +164,12 @@
         android:summary="@string/spoof_games_summary"
         android:defaultValue="false" />
 
+    <org.neoteric.preference.SystemPropertySwitchPreference
+        android:key="persist.sys.pairip.activity.block"
+        android:title="@string/miscellaneous_pairip_activity_block_title"
+        android:summary="@string/miscellaneous_pairip_activity_block_summary"
+        android:defaultValue="false" /> 
+
     <org.neoteric.preference.SecureSettingSwitchPreference
         android:key="window_ignore_secure"
         android:title="@string/window_ignore_secure_title"
