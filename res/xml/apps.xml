@@ -187,11 +187,11 @@
         android:summary="@string/hide_screen_capture_status_summary"
         android:defaultValue="false"/>
 
-    <org.neoteric.preference.SecureSettingSwitchPreference
+    <!-- <org.neoteric.preference.SecureSettingSwitchPreference
         android:key="gms_cert_chain"
         android:title="@string/gms_cert_chain_title"
         android:summary="@string/gms_cert_chain_summary"
-        android:defaultValue="false" />
+        android:defaultValue="true" /> -->
 
     <Preference
         android:key="hide_developer_status_settings"
