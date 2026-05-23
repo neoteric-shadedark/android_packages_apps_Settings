@@ -515,4 +515,8 @@
     <string name="show_ime_space_title">Show IME button space</string>
     <string name="show_ime_space_summary">Enable the input method quick switch feature to switch input methods or hide the on-screen keyboard from the feature bar at the bottom of the screen when typing</string>
 
+    <!-- Google Photos Spoof -->
+    <string name="spoof_photos_title">Google Photos spoof</string>
+    <string name="spoof_photos_summary">Get unlimited original quality photo storage in Google Photos.</string>
+
 </resources>

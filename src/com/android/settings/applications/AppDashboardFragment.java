@@ -79,6 +79,8 @@ public class AppDashboardFragment extends DashboardFragment {
     private Preference mPifUpdate;
     private AppsPreferenceController mAppsPreferenceController;
 
+    private static final String SYS_SPOOF_PHOTOS = "persist.sys.pihooks.photos";
+
     private static final String APP_LOCK_PREF_KEY = "app_lock";
 
     private static List<AbstractPreferenceController> buildPreferenceControllers(Context context,
@@ -185,6 +187,14 @@ public class AppDashboardFragment extends DashboardFragment {
             mPifDataPreference.setFilePickerLauncher(mPifFilePickerLauncher);
         }
 
+        Preference spoofPhotos = findPreference(SYS_SPOOF_PHOTOS);
+        if (spoofPhotos != null) {
+            spoofPhotos.setOnPreferenceChangeListener((preference, newValue) -> {
+                killGooglePhotos();
+                return true;
+            });
+        }
+
         mPifProps.setOnPreferenceClickListener(preference -> {
             showPifProps();
             return true;
@@ -284,6 +294,16 @@ public class AppDashboardFragment extends DashboardFragment {
         }
     }
 
+    private void killGooglePhotos() {
+        try {
+            android.app.ActivityManager am = (android.app.ActivityManager)
+                    getContext().getSystemService(Context.ACTIVITY_SERVICE);
+            am.getClass().getMethod("forceStopPackage", String.class)
+                    .invoke(am, "com.google.android.apps.photos");
+        } catch (Exception e) {
+            android.util.Log.e(TAG, "Failed to kill Google Photos", e);
+        }
+    }
 
     @VisibleForTesting
     PreferenceCategoryController getAdvancedAppsPreferenceCategoryController() {

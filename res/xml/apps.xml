@@ -152,6 +152,12 @@
         android:title="@string/pif_update_title"
         android:summary="@string/pif_update_summary"/>
 
+    <org.neoteric.preference.SystemPropertySwitchPreference
+        android:key="persist.sys.pihooks.photos"
+        android:title="@string/spoof_photos_title"
+        android:summary="@string/spoof_photos_summary"
+        android:defaultValue="false" />
+
     <org.neoteric.preference.SecureSettingSwitchPreference
         android:key="window_ignore_secure"
         android:title="@string/window_ignore_secure_title"
