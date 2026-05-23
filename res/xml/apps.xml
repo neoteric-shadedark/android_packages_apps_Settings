@@ -158,6 +158,12 @@
         android:summary="@string/spoof_photos_summary"
         android:defaultValue="false" />
 
+    <org.neoteric.preference.SystemPropertySwitchPreference
+        android:key="persist.sys.pihooks.games"
+        android:title="@string/spoof_games_title"
+        android:summary="@string/spoof_games_summary"
+        android:defaultValue="false" />
+
     <org.neoteric.preference.SecureSettingSwitchPreference
         android:key="window_ignore_secure"
         android:title="@string/window_ignore_secure_title"

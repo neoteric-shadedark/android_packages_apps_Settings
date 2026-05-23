@@ -519,4 +519,8 @@
     <string name="spoof_photos_title">Google Photos spoof</string>
     <string name="spoof_photos_summary">Get unlimited original quality photo storage in Google Photos.</string>
 
+    <!-- Game Spoof -->
+    <string name="spoof_games_title">Game spoofing</string>
+    <string name="spoof_games_summary">Unlock higher graphics or FPS in certain games.</string>
+
 </resources>
