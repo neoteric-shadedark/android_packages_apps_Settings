@@ -187,8 +187,10 @@ public class AppDashboardFragment extends DashboardFragment {
         mPifMasterSwitch.setOnPreferenceChangeListener((preference, newValue) -> {
             boolean disabled = (Boolean) newValue;
             updatePifPreferencesState(!disabled);
-            if (!disabled) {
+            if (disabled) {
                 clearPifProps();
+                clearKeyboxData();
+                killTargetPackages(true);
             }
             return true;
         });
@@ -229,13 +231,30 @@ public class AppDashboardFragment extends DashboardFragment {
         mPifUpdate.setEnabled(enabled);
         if (mRandomPropertiesButton != null) {
             mRandomPropertiesButton.setEnabled(enabled);
+        if (mKeyboxDataPreference != null) mKeyboxDataPreference.setEnabled(enabled);
         }
     }
 
     private void clearPifProps() {
         Settings.Secure.putString(getContext().getContentResolver(), Settings.Secure.PIF_DATA, "");
         Settings.Secure.putString(getContext().getContentResolver(), Settings.Secure.FETCHED_PIF, "");
+
+        String[] props = {"MODEL", "MANUFACTURER", "BRAND", "DEVICE", "PRODUCT", "FINGERPRINT", "ID", "VERSION.RELEASE"};
+        for (String prop : props) {
+            SystemProperties.set("persist.sys.pihooks_" + prop, "");
+        }
+
+        java.io.File pifFile = new java.io.File("/data/system/pif.json");
+        if (pifFile.exists()) {
+            pifFile.delete();
+        }
         Toast.makeText(getContext(), R.string.pif_props_cleared, Toast.LENGTH_SHORT).show();
+    }
+
+    private void clearKeyboxData() {
+        Settings.Secure.putString(getContext().getContentResolver(), Settings.Secure.KEYBOX_DATA, null);
+        Settings.Secure.putString(getContext().getContentResolver(), Settings.Secure.KEYBOX_DATA_TIMESTAMP, null);
+        Toast.makeText(getContext(), R.string.keybox_toast_file_cleared, Toast.LENGTH_SHORT).show();
     }
 
     private void showPifProps() {
@@ -334,6 +353,11 @@ public class AppDashboardFragment extends DashboardFragment {
     }
 
     private void getRandomFingerprint() {
+        if (mPifMasterSwitch.isChecked()) {
+            Toast.makeText(getContext(), R.string.enable_play_integrity_spoofing_first, Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         final AlertDialog dialog = new AlertDialog.Builder(requireContext())
                 .setTitle(R.string.please_wait)
                 .setMessage(R.string.fetching_pif_properties)
@@ -431,3 +455,4 @@ public class AppDashboardFragment extends DashboardFragment {
         return super.getSettingsLifecycle();
     }
 }
+
