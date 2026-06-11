@@ -23,6 +23,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.InstallSourceInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.os.BatteryManager;
 import android.os.BatteryStats;
 import android.os.BatteryStatsManager;
@@ -626,13 +627,29 @@ public class BatteryUtils {
                 .replaceAll(",", "");
     }
 
-    /** Builds the battery usage time summary. */
     public static String buildBatteryUsageTimeSummary(
             final Context context,
             final boolean isSystem,
             final long foregroundUsageTimeInMs,
             final long backgroundUsageTimeInMs,
             final long screenOnTimeInMs) {
+        return buildBatteryUsageTimeSummary(
+                context,
+                isSystem,
+                foregroundUsageTimeInMs,
+                backgroundUsageTimeInMs,
+                screenOnTimeInMs,
+                /* packageName= */ null);
+    }
+
+    /** Builds the battery usage time summary. */
+    public static String buildBatteryUsageTimeSummary(
+            final Context context,
+            final boolean isSystem,
+            final long foregroundUsageTimeInMs,
+            final long backgroundUsageTimeInMs,
+            final long screenOnTimeInMs,
+            final String packageName) {
         StringBuilder summary = new StringBuilder();
         if (isSystem) {
             final long totalUsageTimeInMs = foregroundUsageTimeInMs + backgroundUsageTimeInMs;
@@ -645,6 +662,8 @@ public class BatteryUtils {
                                 R.string.battery_usage_for_total_time));
             }
         } else {
+            final boolean hideBackgroundTime = isDefaultLauncher(context, packageName);
+
             if (screenOnTimeInMs != 0) {
                 summary.append(
                         buildBatteryUsageTimeInfo(
@@ -653,10 +672,10 @@ public class BatteryUtils {
                                 R.string.battery_usage_screen_time_less_than_one_minute,
                                 R.string.battery_usage_screen_time));
             }
-            if (screenOnTimeInMs != 0 && backgroundUsageTimeInMs != 0) {
+            if (!hideBackgroundTime && screenOnTimeInMs != 0 && backgroundUsageTimeInMs != 0) {
                 summary.append('\n');
             }
-            if (backgroundUsageTimeInMs != 0) {
+            if (!hideBackgroundTime && backgroundUsageTimeInMs != 0) {
                 summary.append(
                         buildBatteryUsageTimeInfo(
                                 context,
@@ -666,6 +685,20 @@ public class BatteryUtils {
             }
         }
         return summary.toString();
+    }
+
+    public static boolean isDefaultLauncher(final Context context, final String packageName) {
+        if (context == null || TextUtils.isEmpty(packageName)) {
+            return false;
+        }
+        final Intent homeIntent =
+                new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME);
+        final ResolveInfo defaultHome =
+                context.getPackageManager()
+                        .resolveActivity(homeIntent, PackageManager.MATCH_DEFAULT_ONLY);
+        return defaultHome != null
+                && defaultHome.activityInfo != null
+                && packageName.equals(defaultHome.activityInfo.packageName);
     }
 
     /** Format the date of battery related info */
