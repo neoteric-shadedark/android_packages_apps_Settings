@@ -128,48 +128,6 @@
         android:title="@string/special_access"
         android:order="20"/>
 
-    <com.android.settings.applications.KeyboxDataPreference
-        android:key="keybox_data_setting"
-        android:title="@string/keybox_data_title"/>
-
-    <org.neoteric.preference.SystemPropertySwitchPreference
-        android:key="persist.sys.pihooks.disable.gms_props"
-        android:title="@string/pif_master_switch_title"
-        android:summary="@string/pif_master_switch_summary"
-        android:defaultValue="false" />
-
-    <com.android.settings.applications.PifDataPreference
-        android:key="pif_data_setting"
-        android:title="@string/pif_data_title"/>
-
-    <Preference
-        android:key="pif_props"
-        android:title="@string/pif_props_title"
-        android:summary="@string/pif_props_summary"/>
-
-    <Preference
-        android:key="pif_update"
-        android:title="@string/pif_update_title"
-        android:summary="@string/pif_update_summary"/>
-
-    <Preference
-        android:key="update_pif_auto_random"
-        android:title="@string/update_pif_auto_random_title"
-        android:summary="@string/update_pif_auto_random_summary" />
-
-    <org.neoteric.preference.SystemPropertySwitchPreference
-        android:key="persist.sys.pihooks.photos"
-        android:title="@string/spoof_photos_title"
-        android:summary="@string/spoof_photos_summary"
-        android:defaultValue="false" />
-
-    <!-- App Spoofing -->
-    <Preference
-        android:key="user_selectable_app_spoofing"
-        android:title="@string/user_selectable_app_spoofing_title"
-        android:summary="@string/user_selectable_app_spoofing_summary"
-        android:fragment="com.android.settings.applications.UserSelectedAppSpoofSettings" />
-
     <org.neoteric.preference.SystemPropertySwitchPreference
         android:key="persist.sys.pairip.activity.block"
         android:title="@string/miscellaneous_pairip_activity_block_title"
@@ -187,12 +145,6 @@
         android:title="@string/hide_screen_capture_status_title"
         android:summary="@string/hide_screen_capture_status_summary"
         android:defaultValue="false"/>
-
-    <!-- <org.neoteric.preference.SecureSettingSwitchPreference
-        android:key="gms_cert_chain"
-        android:title="@string/gms_cert_chain_title"
-        android:summary="@string/gms_cert_chain_summary"
-        android:defaultValue="true" /> -->
 
     <Preference
         android:key="hide_developer_status_settings"

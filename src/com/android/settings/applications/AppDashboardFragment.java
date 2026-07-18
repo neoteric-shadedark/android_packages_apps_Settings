@@ -16,33 +16,13 @@
 
 package com.android.settings.applications;
 
-import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.settings.SettingsEnums;
 import android.content.Context;
-import android.content.Intent;
-import android.os.AsyncTask;
-import android.os.SystemProperties;
 import android.provider.SearchIndexableResource;
-import android.provider.Settings;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
-import android.view.View;
-import android.widget.Toast;
-import android.widget.ProgressBar;
-
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.preference.Preference;
-import androidx.preference.SwitchPreference;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.settings.R;
 import com.android.settings.applications.appcompat.UserAspectRatioAppsPreferenceController;
-import com.android.settings.applications.SpoofingUtils;
 import com.android.settings.dashboard.DashboardFragment;
 import com.android.settings.search.BaseSearchIndexProvider;
 import com.android.settings.security.applock.AppLockSettingsPreferenceController;
@@ -51,18 +31,9 @@ import com.android.settingslib.core.AbstractPreferenceController;
 import com.android.settingslib.core.lifecycle.Lifecycle;
 import com.android.settingslib.search.SearchIndexable;
 
-import org.neoteric.preference.SystemPropertySwitchPreference;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import org.json.JSONObject;
-import org.json.JSONException;
 
 /** Settings page for apps. */
 @SearchIndexable
@@ -71,24 +42,7 @@ public class AppDashboardFragment extends DashboardFragment {
     private static final String TAG = "AppDashboardFragment";
     private static final String ADVANCED_CATEGORY_KEY = "advanced_category";
     private static final String ASPECT_RATIO_PREF_KEY = "aspect_ratio_apps";
-    private static final String KEYBOX_DATA_KEY = "keybox_data_setting";
-    private static final String PIF_DATA_KEY = "pif_data_setting";
-    private static final String PIF_PROPS_KEY = "pif_props";
-    private static final String PIF_UPDATE_KEY = "pif_update";
-    private static final String PIF_MASTER_SWITCH_KEY = "persist.sys.pihooks.disable.gms_props";
-    private static final String KEY_RANDOM_PROPERTIES_BUTTON = "update_pif_auto_random";
-    private ActivityResultLauncher<Intent> mKeyboxFilePickerLauncher;
-    private ActivityResultLauncher<Intent> mPifFilePickerLauncher;
-    private KeyboxDataPreference mKeyboxDataPreference;
-    private PifDataPreference mPifDataPreference;
-    private SystemPropertySwitchPreference mPifMasterSwitch;
-    private Preference mPifProps;
-    private Preference mPifUpdate;
-    private Preference mRandomPropertiesButton;
     private AppsPreferenceController mAppsPreferenceController;
-    private final Handler mHandler = new Handler(Looper.getMainLooper());
-
-    private static final String SYS_SPOOF_PHOTOS = "persist.sys.pihooks.photos";
 
     private static final String APP_LOCK_PREF_KEY = "app_lock";
 
@@ -139,287 +93,6 @@ public class AppDashboardFragment extends DashboardFragment {
         final HibernatedAppsPreferenceController hibernatedAppsPreferenceController =
                 use(HibernatedAppsPreferenceController.class);
         getSettingsLifecycle().addObserver(hibernatedAppsPreferenceController);
-
-        mKeyboxFilePickerLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                    Uri uri = result.getData().getData();
-                    Preference pref = findPreference(KEYBOX_DATA_KEY);
-                    if (pref instanceof KeyboxDataPreference) {
-                        ((KeyboxDataPreference) pref).handleFileSelected(uri);
-                    }
-                }
-            }
-        );
-
-        mPifFilePickerLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                    Uri uri = result.getData().getData();
-                    Preference pref = findPreference(PIF_DATA_KEY);
-                    if (pref instanceof PifDataPreference) {
-                        ((PifDataPreference) pref).handleFileSelected(uri);
-                    }
-                }
-            }
-        );
-    }
-
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        mKeyboxDataPreference = findPreference(KEYBOX_DATA_KEY);
-        mPifDataPreference = findPreference(PIF_DATA_KEY);
-        mPifMasterSwitch = findPreference(PIF_MASTER_SWITCH_KEY);
-        mPifProps = findPreference(PIF_PROPS_KEY);
-        mPifUpdate = findPreference(PIF_UPDATE_KEY);
-        mRandomPropertiesButton = findPreference(KEY_RANDOM_PROPERTIES_BUTTON);
-
-        if (mKeyboxDataPreference != null) {
-            mKeyboxDataPreference.setFilePickerLauncher(mKeyboxFilePickerLauncher);
-        }
-
-        updatePifPreferencesState(!mPifMasterSwitch.isChecked());
-
-        mPifMasterSwitch.setOnPreferenceChangeListener((preference, newValue) -> {
-            boolean disabled = (Boolean) newValue;
-            updatePifPreferencesState(!disabled);
-            if (disabled) {
-                clearPifProps();
-                clearKeyboxData();
-                killTargetPackages(true);
-            }
-            return true;
-        });
-
-        if (mPifDataPreference != null) {
-            mPifDataPreference.setFilePickerLauncher(mPifFilePickerLauncher);
-        }
-
-        Preference spoofPhotos = findPreference(SYS_SPOOF_PHOTOS);
-        if (spoofPhotos != null) {
-            spoofPhotos.setOnPreferenceChangeListener((preference, newValue) -> {
-                killTargetPackages(false);
-                return true;
-            });
-        }
-
-        mPifProps.setOnPreferenceClickListener(preference -> {
-            showPifProps();
-            return true;
-        });
-
-        mPifUpdate.setOnPreferenceClickListener(preference -> {
-            new UpdatePifTask().execute();
-            return true;
-        });
-
-        if (mRandomPropertiesButton != null) {
-            mRandomPropertiesButton.setOnPreferenceClickListener(preference -> {
-                getRandomFingerprint();
-                return true;
-            });
-        }
-    }
-
-    private void updatePifPreferencesState(boolean enabled) {
-        mPifDataPreference.setEnabled(enabled);
-        mPifProps.setEnabled(enabled);
-        mPifUpdate.setEnabled(enabled);
-        if (mRandomPropertiesButton != null) {
-            mRandomPropertiesButton.setEnabled(enabled);
-        if (mKeyboxDataPreference != null) mKeyboxDataPreference.setEnabled(enabled);
-        }
-    }
-
-    private void clearPifProps() {
-        Settings.Secure.putString(getContext().getContentResolver(), Settings.Secure.PIF_DATA, "");
-        Settings.Secure.putString(getContext().getContentResolver(), Settings.Secure.FETCHED_PIF, "");
-
-        String[] props = {"MODEL", "MANUFACTURER", "BRAND", "DEVICE", "PRODUCT", "FINGERPRINT", "ID", "VERSION.RELEASE"};
-        for (String prop : props) {
-            SystemProperties.set("persist.sys.pihooks_" + prop, "");
-        }
-
-        java.io.File pifFile = new java.io.File("/data/system/pif.json");
-        if (pifFile.exists()) {
-            pifFile.delete();
-        }
-        Toast.makeText(getContext(), R.string.pif_props_cleared, Toast.LENGTH_SHORT).show();
-    }
-
-    private void clearKeyboxData() {
-        Settings.Secure.putString(getContext().getContentResolver(), Settings.Secure.KEYBOX_DATA, null);
-        Settings.Secure.putString(getContext().getContentResolver(), Settings.Secure.KEYBOX_DATA_TIMESTAMP, null);
-        Toast.makeText(getContext(), R.string.keybox_toast_file_cleared, Toast.LENGTH_SHORT).show();
-    }
-
-    private void showPifProps() {
-        String fetchedPif = Settings.Secure.getString(getContext().getContentResolver(),
-                Settings.Secure.FETCHED_PIF);
-        String pifData = Settings.Secure.getString(getContext().getContentResolver(),
-                Settings.Secure.PIF_DATA);
-
-        StringBuilder sb = new StringBuilder();
-        sb.append(getString(R.string.auto_updated_pif)).append("\n");
-        if (fetchedPif != null && !fetchedPif.isEmpty()) {
-            try {
-                JSONObject json = new JSONObject(fetchedPif);
-                sb.append(json.toString(4));
-            } catch (JSONException e) {
-                sb.append(fetchedPif);
-            }
-        } else {
-            sb.append(getString(R.string.not_set));
-        }
-
-        sb.append("\n\n" + getString(R.string.manually_imported_pif) + "\n");
-        if (pifData != null && !pifData.isEmpty()) {
-            try {
-                JSONObject json = new JSONObject(pifData);
-                sb.append(json.toString(4));
-            } catch (JSONException e) {
-                sb.append(pifData);
-            }
-        } else {
-            sb.append(getString(R.string.not_set));
-        }
-
-        new AlertDialog.Builder(getContext())
-                .setTitle(R.string.play_integrity_fix_properties)
-                .setMessage(sb.toString())
-                .setPositiveButton(android.R.string.ok, null)
-                .show();
-    }
-
-    private class UpdatePifTask extends AsyncTask<Void, Void, String> {
-        private static final String PIF_URL = "https://raw.githubusercontent.com/Neoteric-OS/android_vendor_gms_spoof/refs/heads/master/gms_certified_props.json";
-
-        @Override
-        protected String doInBackground(Void... voids) {
-            try {
-                URL url = new URL(PIF_URL);
-                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-                try {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-                    StringBuilder response = new StringBuilder();
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        response.append(line);
-                    }
-                    return response.toString();
-                } finally {
-                    urlConnection.disconnect();
-                }
-            } catch (Exception e) {
-                return null;
-            }
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            if (result != null) {
-                Settings.Secure.putString(getContext().getContentResolver(),
-                        Settings.Secure.PIF_DATA, "");
-                Settings.Secure.putString(getContext().getContentResolver(),
-                        Settings.Secure.FETCHED_PIF, result);
-                killTargetPackages(true);
-                Toast.makeText(getContext(), R.string.pif_updated_successfully, Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(getContext(), R.string.failed_to_update_pif, Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
-    private void killTargetPackages(boolean isGms) {
-        try {
-            android.app.ActivityManager am = (android.app.ActivityManager)
-                    getContext().getSystemService(Context.ACTIVITY_SERVICE);
-            if (isGms) {
-                am.getClass().getMethod("forceStopPackage", String.class)
-                        .invoke(am, "com.google.android.gms");
-                am.getClass().getMethod("forceStopPackage", String.class)
-                        .invoke(am, "com.android.vending");
-            } else {
-                am.getClass().getMethod("forceStopPackage", String.class)
-                        .invoke(am, "com.google.android.apps.photos");
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Failed to kill packages", e);
-        }
-    }
-
-    private void getRandomFingerprint() {
-        if (mPifMasterSwitch.isChecked()) {
-            Toast.makeText(getContext(), R.string.enable_play_integrity_spoofing_first, Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        final AlertDialog dialog = new AlertDialog.Builder(requireContext())
-                .setTitle(R.string.please_wait)
-                .setMessage(R.string.fetching_pif_properties)
-                .setCancelable(false)
-                .setView(new ProgressBar(requireContext()))
-                .create();
-        dialog.show();
-
-        new Thread(() -> {
-            try {
-                Map<String, String> newValues = SpoofingUtils.getRandomFingerprint(
-                        SystemProperties.get("persist.sys.pihooks_DEVICE", ""));
-
-                String spoofedModel = newValues.get("MODEL");
-
-                JSONObject jsonProps = new JSONObject();
-                for (Map.Entry<String, String> entry : newValues.entrySet()) {
-                    jsonProps.put(entry.getKey(), entry.getValue());
-                    SystemProperties.set("persist.sys.pihooks_" + entry.getKey(), entry.getValue());
-                }
-
-                String jsonString = jsonProps.toString();
-
-                Settings.Secure.putString(getContext().getContentResolver(),
-                        Settings.Secure.PIF_DATA, jsonString);
-                String timestamp = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm",
-                        java.util.Locale.getDefault()).format(new java.util.Date());
-                Settings.Secure.putString(getContext().getContentResolver(),
-                        Settings.Secure.PIF_DATA_TIMESTAMP, timestamp);
-
-                try {
-                    java.io.File pifFile = new java.io.File("/data/system/pif.json");
-                    java.io.FileOutputStream fos = new java.io.FileOutputStream(pifFile);
-                    fos.write(jsonString.getBytes());
-                    fos.close();
-                    pifFile.setReadable(true, false);
-                } catch (java.io.IOException e) {
-                    Log.e(TAG, "Failed to write pif.json", e);
-                }
-
-                mHandler.post(() -> {
-                    if (getContext() != null) {
-                        String toastMessage = getString(R.string.toast_spoofing_success, spoofedModel);
-                        Toast.makeText(getContext(), toastMessage, Toast.LENGTH_LONG).show();
-                        killTargetPackages(true);
-                        if (mPifDataPreference != null) {
-                            mPifDataPreference.setSummary(mPifDataPreference.getSummary());
-                        }
-                    }
-                });
-            } catch (Exception e) {
-                Log.e(TAG, "Error generating random PIF", e);
-                mHandler.post(() -> {
-                    if (getContext() != null) {
-                        Toast.makeText(getContext(), R.string.toast_spoofing_failure,
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
-            } finally {
-                mHandler.post(dialog::dismiss);
-            }
-        }).start();
     }
 
     @VisibleForTesting
@@ -455,4 +128,3 @@ public class AppDashboardFragment extends DashboardFragment {
         return super.getSettingsLifecycle();
     }
 }
-
